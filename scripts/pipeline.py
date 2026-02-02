@@ -265,9 +265,9 @@ class AccessibilityScanner:
         except FileNotFoundError:
             pass
         
-        # Check pa11y
+        # Check pa11y (via npx or global)
         try:
-            result = subprocess.run(['pa11y', '--version'], capture_output=True, text=True)
+            result = subprocess.run(['npx', 'pa11y', '--version'], capture_output=True, text=True)
             deps['pa11y'] = result.returncode == 0
         except FileNotFoundError:
             pass
@@ -343,7 +343,7 @@ class AccessibilityScanner:
         try:
             runners = ','.join(self.config.pa11y_runners)
             cmd = [
-                'pa11y',
+                'npx', 'pa11y',
                 str(file_path),
                 '-s', self.config.wcag_standard,
                 '-r', 'json',
@@ -365,7 +365,7 @@ class AccessibilityScanner:
         except subprocess.TimeoutExpired:
             return {'error': 'Scan timed out'}
         except FileNotFoundError:
-            return {'error': 'pa11y not found - install with: npm install -g pa11y'}
+            return {'error': 'pa11y not found - run npm install in project root'}
         except Exception as e:
             return {'error': str(e)}
     
@@ -877,13 +877,9 @@ def install_dependencies():
         logger.error("Node.js not found. Please install from https://nodejs.org/")
         sys.exit(1)
     
-    # Install pa11y
+    # Install pa11y locally
     logger.info("Installing pa11y...")
-    subprocess.run(['npm', 'install', '-g', 'pa11y', 'pa11y-ci'], check=True)
-    
-    # Install axe-core runner for pa11y
-    logger.info("Installing pa11y-runner-axe...")
-    subprocess.run(['npm', 'install', '-g', '@axe-core/puppeteer'], check=True)
+    subprocess.run(['npm', 'install'], check=True)
     
     logger.info("Dependencies installed successfully!")
     logger.info("\nNote: veraPDF must be installed separately.")

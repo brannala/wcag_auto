@@ -45,7 +45,7 @@ cd canvas-a11y-pipeline
 pip install -r requirements.txt
 
 # Install pa11y (requires Node.js)
-npm install -g pa11y
+npm install
 
 # Verify installation
 python scripts/pipeline.py install-deps
@@ -336,11 +336,12 @@ See the documentation in `docs/`:
 # Ensure Node.js is installed
 node --version
 
-# Install pa11y globally
-npm install -g pa11y
+# Install from project root
+cd canvas-a11y-pipeline
+npm install
 
 # Verify
-pa11y --version
+npx pa11y --version
 ```
 
 ### veraPDF not found

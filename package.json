@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "name": "canvas-a11y-pipeline",
+  "description": "Canvas LMS accessibility remediation pipeline",
+  "dependencies": {
+    "pa11y": "^8.0.0",
+    "pa11y-ci": "^4.1.0"
+  }
+}
