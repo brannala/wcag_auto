@@ -1,0 +1,13 @@
+{
+    "canvas_url": "https://canvas.youruniversity.edu",
+    "canvas_token": "YOUR_CANVAS_API_TOKEN_HERE",
+    "course_id": "12345",
+    "work_dir": "./a11y_work",
+    "output_dir": "./a11y_output",
+    "wcag_standard": "WCAG2AA",
+    "pa11y_runners": ["axe", "htmlcs"],
+    "verapdf_profile": "ua1",
+    "skip_pdf_scan": false,
+    "skip_html_scan": false,
+    "generate_claude_input": true
+}
