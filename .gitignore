@@ -1,0 +1,10 @@
+package-lock.json
+package.json
+WCAG_discussion.docx
+remediation/
+skills/
+fixed/
+reports/
+exports/
+node_modules/
+v1/

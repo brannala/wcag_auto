@@ -333,30 +333,41 @@ class AccessibilityScanner:
         with open(report_path, 'w') as f:
             json.dump(report, f, indent=2)
         
+        error_count = sum(1 for fr in report['file_reports'] if fr.get('error'))
         logger.info(f"HTML scan complete: {report['total_issues']} issues "
                    f"in {report['files_with_issues']}/{report['files_scanned']} files")
+        if error_count:
+            logger.warning(f"  {error_count}/{report['files_scanned']} files had scan errors")
         
         return report
     
     def _scan_single_html(self, file_path: Path) -> dict:
         """Scan a single HTML file with pa11y."""
         try:
-            runners = ','.join(self.config.pa11y_runners)
+            # Resolve config file relative to project root
+            config_file = Path(__file__).parent.parent / 'pa11y-config.json'
             cmd = [
                 'npx', 'pa11y',
                 str(file_path),
                 '-s', self.config.wcag_standard,
                 '-r', 'json',
-                '-e', runners,
+                '-c', str(config_file),
                 '--include-notices',
                 '--include-warnings'
             ]
+            # Each runner needs its own -e flag
+            for runner in self.config.pa11y_runners:
+                cmd.extend(['-e', runner])
             
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
             
             if result.stdout:
                 try:
-                    return json.loads(result.stdout)
+                    data = json.loads(result.stdout)
+                    # pa11y returns a JSON array of issues, wrap it
+                    if isinstance(data, list):
+                        return {'issues': data}
+                    return data
                 except json.JSONDecodeError:
                     return {'error': 'Invalid JSON output', 'raw': result.stdout[:500]}
             
@@ -418,8 +429,11 @@ class AccessibilityScanner:
         with open(report_path, 'w') as f:
             json.dump(report, f, indent=2)
         
+        error_count = sum(1 for fr in report['file_reports'] if fr.get('error'))
         logger.info(f"PDF scan complete: {report['total_issues']} issues "
                    f"in {report['files_with_issues']}/{report['files_scanned']} files")
+        if error_count:
+            logger.warning(f"  {error_count}/{report['files_scanned']} files had scan errors")
         
         return report
     
@@ -443,13 +457,21 @@ class AccessibilityScanner:
                     report = data.get('report', data)
                     jobs = report.get('jobs', [])
                     
+                    compliant = False
                     for job in jobs:
-                        validation = job.get('validationResult', {})
+                        # validationResult is an array in veraPDF 1.28+
+                        vr = job.get('validationResult', {})
+                        if isinstance(vr, list):
+                            validation = vr[0] if vr else {}
+                        else:
+                            validation = vr
+                        
+                        compliant = validation.get('compliant', False)
                         details = validation.get('details', {})
-                        rules = details.get('rules', [])
+                        rules = details.get('ruleSummaries', details.get('rules', []))
                         
                         for rule in rules:
-                            if rule.get('status') == 'failed':
+                            if rule.get('status') == 'failed' or rule.get('ruleStatus') == 'failed':
                                 issues.append({
                                     'rule': rule.get('clause', ''),
                                     'description': rule.get('description', ''),
@@ -458,7 +480,7 @@ class AccessibilityScanner:
                                 })
                     
                     return {
-                        'compliant': validation.get('compliant', False),
+                        'compliant': compliant,
                         'issues': issues
                     }
                 except json.JSONDecodeError:
