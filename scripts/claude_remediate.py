@@ -752,7 +752,7 @@ def generate_claude_prompts(remediation_input: dict, output_dir: Path):
 - **Type:** {issue.get('type', 'error')}
 - **Code:** {issue.get('code', 'N/A')}
 - **Message:** {issue.get('message', 'N/A')}
-- **Context:** `{issue.get('context', 'N/A')[:200]}`
+- **Context:** `{(issue.get('context') or 'N/A')[:200]}`
 - **Hint:** {issue.get('remediation_hint', 'N/A')}
 """
         
